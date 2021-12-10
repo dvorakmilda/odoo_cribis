@@ -16,7 +16,7 @@ class Cribis():
         self.url="https://ws.cribis.cz/CribisCZWS.asmx"
 
     def call_cribis(self):
-        message = f'<Message GId="' + \
+        message = '<Message GId="' + \
             str(uuid.uuid4())+ \
             '" MId="' + \
             str(uuid.uuid4()) + \
@@ -28,7 +28,7 @@ class Cribis():
             '" UPwd="' + \
             self.password + \
             '"/>' + \
-            '<P SId="SCZ" PId="{self.PId}" PNs="{self.PNs}"/>' + \
+            '<P SId="SCZ" PId="'+self.PId+'" PNs="'+self.PNs+'"/>' + \
             '<Tx TxNs="urn:crif-messagegateway:2006-08-23"/>' + \
             "</Message>"
         html_req=html.escape(self.MGRequest)
@@ -45,7 +45,7 @@ class Cribis():
             "</soap:Envelope>"
 
         headers = {"User-Agent": "asg-soap/0.0.1",
-                "Content-Length": len(body),
+                "Content-Length": str(len(body)),
                 "Accept": "text/xml",
                 "Content-Type": "text/xml; charset=utf-8"
                 }
