@@ -12,7 +12,7 @@ class Cribis():
     def __init__(self):
         self.login='asg-T2T'
         self.password='Ac7.UG'
-        self.ico='49496182'
+        self.ico='26200031'
         self.country='CZ'
         self.PId= "CribisCZ_GetGlobalMicroReport"
         self.PNs= "urn:crif-cribiscz-GetGlobalMicroReport:2014-04-08"
@@ -65,11 +65,12 @@ class Cribis():
         key_information=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyInformation']
         financial_ratios=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['FinancialRatios']
         company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyRatingCalculationResponse']
-        key_results_warning=company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyResultsWarning']
+        key_results_warning=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyResultsWarning']
 
-        self.data_odoo=[{'report_date':parser.parse(company_identification.get('ReportDate')),
-                    'ent_id':company_identification.get('Ent_id'),
-                    'index_cribis_level':company_rating_calculation_response.get('IndexCribis10Level')
+        self.data_odoo=[{'report_date': parser.parse(company_identification.get('ReportDate')),
+                    'ent_id': company_identification.get('EntId'),
+                    'index_cribis_level': company_rating_calculation_response.get('IndexCribis10Level'),
+                    'semafor': company_identification.get('Semafor'),
                     }]
 
         print(self.data_odoo)
