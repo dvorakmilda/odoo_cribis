@@ -1,9 +1,10 @@
 import requests
 import uuid
 import datetime
+import xmltodict
 import html
 import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import Element, ElementTree
+from html.parser import HTMLParser
 
 
 
@@ -53,13 +54,54 @@ class Cribis():
 
         return requests.post(self.url,data=body,headers=headers)
 
+
+from html.parser import HTMLParser
+from html.entities import name2codepoint
+
+class MyHTMLParser(HTMLParser):
+    def handle_starttag(self, tag, attrs):
+        print("Start tag:", tag)
+        for attr in attrs:
+            print("     attr:", attr)
+
+    def handle_endtag(self, tag):
+        print("End tag  :", tag)
+
+    def handle_data(self, data):
+        print("Data     :", data)
+
+    def handle_comment(self, data):
+        print("Comment  :", data)
+
+    def handle_entityref(self, name):
+        c = chr(name2codepoint[name])
+        print("Named ent:", c)
+
+    def handle_charref(self, name):
+        if name.startswith('x'):
+            c = chr(int(name[1:], 16))
+        else:
+            c = chr(int(name))
+        print("Num ent  :", c)
+
+    def handle_decl(self, data):
+        print("Decl     :", data)
+
+
+
+
 if __name__ == "__main__":
     cribis=Cribis()
     call=cribis.call_cribis()
-    string_xml=call.content
-    tree=ET.fromstring(string_xml)
-    ET.dump(tree)
+    string_xml=call.text
+    tree=xmltodict.parse(string_xml)
+    data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
+    data_tree=xmltodict.parse(data)['GetPortfolioOutput']['Portfolio']['Company']
+    for i in data_tree:
+        data_odoo=[{'ico': i['@Ic']
 
+                    }]
+        print(data_odoo)
 
 
 
