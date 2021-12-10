@@ -2,7 +2,8 @@ import requests
 import uuid
 import datetime
 import html
-
+import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element, ElementTree
 
 
 
@@ -55,7 +56,10 @@ class Cribis():
 if __name__ == "__main__":
     cribis=Cribis()
     call=cribis.call_cribis()
-    print(call)
+    string_xml=call.content
+    tree=ET.fromstring(string_xml)
+    ET.dump(tree)
+
 
 
 
