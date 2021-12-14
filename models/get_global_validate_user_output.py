@@ -51,10 +51,10 @@ class Cribis():
         accounts=data_xml['GlobalValidateUserOutput']['Accounts']['Account']
 
         for account in accounts:
-            data_odoo=[{'account_type_id': account.get('AccountTypeID'),
+            data_odoo=[{'account_type_id': account.get('AccountTypeId'),
                     'account_type': account.get('AccountType'),
-                    'valid_from': account.get('ValidFrom'),
-                    'expiration': account.get('Expiration'),
+                    'valid_from': parser.parse(account.get('ValidFrom')),
+                    'expiration': parser.parse(account.get('Expiration')),
                     'remaining':account.get('Remaining'),
                     'obtained':account.get('Obtained'),
                     'unit': account.get('Unit')
