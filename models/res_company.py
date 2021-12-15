@@ -51,6 +51,7 @@ class ResCompany(models.Model):
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
         data_xml=xmltodict.parse(data)
         accounts=data_xml['GlobalValidateUserOutput']['Accounts']['Account']
+        delete_cribis_ids=self.cribis_ids=([(5,_,_)])
 
         for account in accounts:
             data_odoo=[(0,_,{'account_type_id': account.get('AccountTypeId'),
