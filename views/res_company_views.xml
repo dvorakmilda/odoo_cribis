@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id='cribis_base_view_company_form' model="ir.ui.view">
+        <field name="name">cribis.res.company.form</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref='base.view_company_form'/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_info']" position="after">
+                <page string="CRIBIS" name="cribis_info">
+                    <group>
+                        <group>
+                            <field name="cribis_login"/>
+                            <field name="cribis_password"/>
+                            <field name="cribis_url"/>
+                        </group>
+                        <group>
+                            <field name="cribis_ftp_address"/>
+                            <field name="cribis_ftp_login"/>
+                            <field name="cribis_ftp_password"/>
+                        </group>
+                        <field name="cribis_ids" mode="tree" readonly="1">
+                            <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="valid_from"/>
+                                    <field name="expiration"/>
+                                    <field name="remaining"/>
+                                    <field name="obtained"/>
+                                    <field name="unit"/>
+                            </tree>
+                        </field>
+                        <footer>
+                        <button name="cribis_get_global_validate_user_output" string="Get User Output" type="object" class="oe_highlight"/>
+                        </footer>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

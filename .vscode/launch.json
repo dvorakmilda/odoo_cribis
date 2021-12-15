@@ -10,6 +10,28 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+                    "name": "Odoo: Attach",
+                    "type": "python",
+                    "request": "attach",
+                    "port": 8869,
+                    "debugServer": 8888,
+                    "host": "localhost",
+                    "justMyCode": false,
+                    "pathMappings": [
+                        {
+                            "localRoot": "${workspaceFolder}",
+                            "remoteRoot": "/mnt/extra-addons/odoo_cribis",
+                        }
+                    ],
+                    "logToFile": true
+                    //"preLaunchTask": "init docker",
+                    //"postDebugTask": "stop docker"
+                }
+            ]
         }
-    ]
+
+
+
 }

@@ -1,3 +1,7 @@
+from odoo import fields, models, api, _
+from odoo.exceptions import UserError
+from ares_util.ares import call_ares, validate_czech_company_id
+from ares_util.exceptions import AresConnectionError
 import requests
 import uuid
 import datetime
@@ -7,25 +11,23 @@ import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from dateutil import parser
 
+class ResCompany(models.Model):
+    _inherit = "res.company"
+    
+    cribis_ids = fields.Many2many('res.company.cribis', string='')
+    cribis_login = fields.Char(string='', default='asg-T2T')
+    cribis_password = fields.Char(string='', default='Ac7.UG')
+    cribis_url = fields.Char(string='', default="https://ws.cribis.cz/CribisCZWS.asmx")
+    cribis_ftp_address = fields.Char(string='')
+    cribis_ftp_login = fields.Char(string='')
+    cribis_ftp_password = fields.Char(string='')
 
-class Cribis():
-    def __init__(self):
-        self.login='asg-T2T'
-        self.password='Ac7.UG'
-#        self.PId= "CribisCZ_GetUpdates2"
-#        self.PNs= "urn:crif-cribiscz-GetUpdates2:2012-08-31"
-
-        self.day=datetime.datetime.today()-datetime.timedelta(days=7)
-        self.day_string=self.day.strftime('%Y-%m-%d')
-
-        self.url="https://ws.cribis.cz/CribisCZWS.asmx"
-
-    def call_cribis(self):
+    def cribis_get_global_validate_user_output(self):
         body = '<?xml version="1.0" encoding="utf-8"?>' + \
             '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">' + \
             '<soap:Header>' + \
             '<Message GId="' + str(uuid.uuid4()) + '" MId="' + str(uuid.uuid4()) + '" MTs="' + datetime.datetime.utcnow().isoformat() + '" xmlns="urn:crif-message:2006-08-23">' + \
-            '<C UD="" UId="' + self.login + '" UPwd="' + self.password + '"/>' + \
+            '<C UD="" UId="' + self.cribis_login + '" UPwd="' + self.cribis_password + '"/>' + \
             '<P SId="SCZ" PId="CribisCZ_GlobalValidateUser" PNs="urn:crif-cribiscz-GlobalValidateUser:2015-10-21"/>' + \
             '<Tx TxNs="urn:crif-messagegateway:2006-08-23"/>' + \
             '</Message>' + \
@@ -43,7 +45,7 @@ class Cribis():
                 "Content-Type": "text/xml; charset=utf-8"
                 }
 
-        call=requests.post(self.url,data=body,headers=headers)
+        call=requests.post(self.cribis_url,data=body,headers=headers)
         string_xml=call.text
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
@@ -51,33 +53,27 @@ class Cribis():
         accounts=data_xml['GlobalValidateUserOutput']['Accounts']['Account']
 
         for account in accounts:
-            data_odoo=[{'account_type_id': account.get('AccountTypeId'),
+            data_odoo=[(0,_,{'account_type_id': account.get('AccountTypeId'),
                     'name': account.get('AccountType'),
                     'valid_from': parser.parse(account.get('ValidFrom')),
                     'expiration': parser.parse(account.get('Expiration')),
                     'remaining':account.get('Remaining'),
                     'obtained':account.get('Obtained'),
                     'unit': account.get('Unit')
-                    }]
-            print (data_odoo)
+                    })]
+            self.cribis_ids=(data_odoo)
 
 
-#        company_identification=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyIdentification']
-#        key_information=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyInformation']
-#        financial_ratios=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['FinancialRatios']
-#        company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyRatingCalculationResponse']
-#        key_results_warning=company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyResultsWarning']
-"""
-        self.data_odoo=[{'report_date':parser.parse(company_identification.get('ReportDate')),
-                    'ent_id':company_identification.get('Ent_id'),
-                    'index_cribis_level':company_rating_calculation_response.get('IndexCribis10Level')
-                    }]
 
-        print(self.data_odoo)
-        return self.data_odoo
-"""
+class ResCompanyCribis(models.Model):
+    _name = "res.company.cribis"
+    _description = 'res.company.cribis'
 
-if __name__ == "__main__":
-    cribis=Cribis()
-    call=cribis.call_cribis()
+    name = fields.Char(string='Account Type')
+    account_type_id = fields.Integer(string='')
+    valid_from = fields.Datetime(string='')
+    expiration = fields.Datetime(string='')
+    remaining = fields.Char(string='')
+    obtained = fields.Char(string='')
+    unit = fields.Char(string='')
 
