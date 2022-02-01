@@ -9,6 +9,7 @@
                 <page string="CRIBIS" name="cribis_info">
                     <group>
                         <group>
+                            <field name="business_id"/>
                             <field name="cribis_login"/>
                             <field name="cribis_password"/>
                             <field name="cribis_url"/>

@@ -14,6 +14,7 @@ from dateutil import parser
 class ResCompany(models.Model):
     _inherit = "res.company"
     
+    business_id = fields.Char()
     cribis_ids = fields.Many2many('res.company.cribis', string='')
     cribis_login = fields.Char(string='', default='asg-T2T')
     cribis_password = fields.Char(string='', default='Ac7.UG')

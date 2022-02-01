@@ -59,13 +59,15 @@ class Cribis():
         data_tree=xmltodict.parse(data)['GetPortfolioOutput']['Portfolio']['Company']
         self.cribis_data=[]
         for i in data_tree:
+            country_id=self.env['res.country'].search([('code','like', i.get('@CountryCode') )])
             data_odoo=[{'name':i.get('@Name'),
-                        'ico': i.get('@Ic'),
-                        'country_code': i.get('@CountryCode'),
+                        'business_id': i.get('@Ic'),
+                        'country_code': country_id,
                         'activation_date':parser.parse(i.get('@ActivationDate')),
-                        'ent_id':i.get('@Ent_id'),
+                        'ent_id':int(i.get('@Ent_id')),
                         }]
             self.cribis_data.append(data_odoo)
+        print (self.cribis_data)
         return self.cribis_data
 
 
