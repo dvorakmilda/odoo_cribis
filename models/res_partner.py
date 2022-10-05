@@ -15,6 +15,7 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
     
     business_id = fields.Char()
+    cribis_activation_date= fields.Datetime('Monitoring activation')
     cribis_ent_id = fields.Integer(string='')
     
 
@@ -23,9 +24,9 @@ class ResPartner(models.Model):
         PId= "CribisCZ_GetPortfolio"
         PNs= "urn:crif-cribiscz-GetPortfolio:2011-09-01"
         MGRequest='<GetPortfolioInput xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:crif-cribiscz-GetPortfolio:2011-09-01"/>'
-        CRIBIS_LOGIN=  self.user.company.cribis_login
-        CRIBIS_PASSWORD= self.user.company.cribis_password
-
+        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
+        CRIBIS_LOGIN = cribis_company.get('cribis_login')
+        CRIBIS_PASSWORD = cribis_company.get('cribis_password')
 
         message = '<Message GId="' + \
             str(uuid.uuid4())+ \
@@ -61,7 +62,7 @@ class ResPartner(models.Model):
                 "Content-Type": "text/xml; charset=utf-8"
                 }
 
-        call=requests.post(self.url,data=body,headers=headers)
+        call=requests.post(cribis_company.get('cribis_url'),data=body,headers=headers)
         string_xml=call.text
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
@@ -69,13 +70,24 @@ class ResPartner(models.Model):
         cribis_data=[]
         for i in data_tree:
             country_id=self.env['res.country'].search([('code','like', i.get('@CountryCode') )])
-            data_odoo=[{'name':i.get('@Name'),
+            print (country_id['id'])
+            data_odoo={'name':i.get('@Name'),
                         'business_id': i.get('@Ic'),
-                        'country_code': country_id,
-                        'activation_date':parser.parse(i.get('@ActivationDate')),
-                        'ent_id':int(i.get('@Ent_id')),
-                        }]
-            cribis_data.append(data_odoo)
-        print(cribis_data)
+                        'country_id': country_id['id'],
+                        'cribis_activation_date':parser.parse(i.get('@ActivationDate')),
+                        'cribis_ent_id':int(i.get('@Ent_id')),
+                        }
+
+            partner=self.env['res.partner'].create(data_odoo)
+            commit=self.env.cr.commit()
+
+            print(partner)
+            #commit=self.env.cr.commit()
+        #načíst organizace podle ičo
+
+        #podívat se podle ico jaký organizace mám v odoo
+
+        #když existuje organizace, tak u
+
 
 
