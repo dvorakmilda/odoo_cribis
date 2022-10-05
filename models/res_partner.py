@@ -76,6 +76,6 @@ class ResPartner(models.Model):
                         'ent_id':int(i.get('@Ent_id')),
                         }]
             cribis_data.append(data_odoo)
-
+        print(cribis_data)
 
 

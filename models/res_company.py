@@ -24,11 +24,13 @@ class ResCompany(models.Model):
     cribis_ftp_password = fields.Char(string='')
 
     def cribis_get_global_validate_user_output(self):
+        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
+
         body = '<?xml version="1.0" encoding="utf-8"?>' + \
             '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">' + \
             '<soap:Header>' + \
             '<Message GId="' + str(uuid.uuid4()) + '" MId="' + str(uuid.uuid4()) + '" MTs="' + datetime.datetime.utcnow().isoformat() + '" xmlns="urn:crif-message:2006-08-23">' + \
-            '<C UD="" UId="' + self.cribis_login + '" UPwd="' + self.cribis_password + '"/>' + \
+            '<C UD="" UId="' + cribis_company.get('cribis_login') + '" UPwd="' + cribis_company.get('cribis_password') + '"/>' + \
             '<P SId="SCZ" PId="CribisCZ_GlobalValidateUser" PNs="urn:crif-cribiscz-GlobalValidateUser:2015-10-21"/>' + \
             '<Tx TxNs="urn:crif-messagegateway:2006-08-23"/>' + \
             '</Message>' + \
@@ -40,13 +42,14 @@ class ResCompany(models.Model):
             '</soap:Body>' + \
             '</soap:Envelope>'
 
+
         headers = {"User-Agent": "asg-soap/0.0.1",
                 "Content-Length": str(len(body)),
                 "Accept": "text/xml",
                 "Content-Type": "text/xml; charset=utf-8"
                 }
 
-        call=requests.post(self.cribis_url,data=body,headers=headers)
+        call=requests.post(cribis_company.get('cribis_url'),data=body,headers=headers)
         string_xml=call.text
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
@@ -64,6 +67,7 @@ class ResCompany(models.Model):
                     'unit': account.get('Unit')
                     })]
             self.cribis_ids=(data_odoo)
+            print(data_odoo)
 
 
 
