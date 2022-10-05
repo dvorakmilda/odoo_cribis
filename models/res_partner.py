@@ -72,11 +72,12 @@ class ResPartner(models.Model):
             country_id=self.env['res.country'].search([('code','like', i.get('@CountryCode') )])
             print (country_id['id'])
             data_odoo={'name':i.get('@Name'),
-                        'business_id': i.get('@Ic'),
-                        'country_id': country_id['id'],
-                        'cribis_activation_date':parser.parse(i.get('@ActivationDate')),
-                        'cribis_ent_id':int(i.get('@Ent_id')),
-                        }
+                    'company_type': 'company',
+                    'business_id': i.get('@Ic'),
+                    'country_id': country_id['id'],
+                    'cribis_activation_date':parser.parse(i.get('@ActivationDate')),
+                    'cribis_ent_id':int(i.get('@Ent_id')),
+                    }
 
             partner=self.env['res.partner'].create(data_odoo)
             commit=self.env.cr.commit()
