@@ -25,6 +25,7 @@ class ResCompany(models.Model):
 
     def cribis_get_global_validate_user_output(self):
         cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
+        company_obj=self.env['res.company'].browse(1)
 
         body = '<?xml version="1.0" encoding="utf-8"?>' + \
             '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">' + \
@@ -55,10 +56,14 @@ class ResCompany(models.Model):
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
         data_xml=xmltodict.parse(data)
         accounts=data_xml['GlobalValidateUserOutput']['Accounts']['Account']
-        delete_cribis_ids=self.cribis_ids=([(5,_,_)])
+        for cribis_id in cribis_company.get('cribis_ids'):
+            delete_id=company_obj.write( {'cribis_ids' : [(2,cribis_id)]})
+            print(delete_id)
+#        delete_cribis_ids=company_obj.write( {'cribis_ids' : [(5,_,_)]})
+        commit=self.env.cr.commit()
 
         for account in accounts:
-            data_odoo=[(0,_,{'account_type_id': account.get('AccountTypeId'),
+            data_odoo=[(0,0,{'account_type_id': account.get('AccountTypeId'),
                     'name': account.get('AccountType'),
                     'valid_from': parser.parse(account.get('ValidFrom')),
                     'expiration': parser.parse(account.get('Expiration')),
@@ -66,8 +71,10 @@ class ResCompany(models.Model):
                     'obtained':account.get('Obtained'),
                     'unit': account.get('Unit')
                     })]
-            self.cribis_ids=(data_odoo)
-            print(data_odoo)
+            write_cribis_ids=company_obj.write( {'cribis_ids' : data_odoo })
+            commit=self.env.cr.commit()
+
+            print(data_odoo, write_cribis_ids, commit)
 
 
 
