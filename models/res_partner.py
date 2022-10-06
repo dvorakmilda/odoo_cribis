@@ -16,6 +16,7 @@ class ResPartner(models.Model):
     
     business_id = fields.Char()
     cribis_activation_date= fields.Datetime('Monitoring activation')
+    cribis_monitoring = fields.Boolean(string='Monitoring cribis')
     cribis_ent_id = fields.Integer(string='')
     
 
@@ -67,7 +68,7 @@ class ResPartner(models.Model):
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
         data_tree=xmltodict.parse(data)['GetPortfolioOutput']['Portfolio']['Company']
-        cribis_data=[]
+        cribis_partner=self.env['res.partner'].search_read([('company_type','=' ,'company')])
         for i in data_tree:
             country_id=self.env['res.country'].search([('code','like', i.get('@CountryCode') )])
             print (country_id['id'])
@@ -77,12 +78,20 @@ class ResPartner(models.Model):
                     'country_id': country_id['id'],
                     'cribis_activation_date':parser.parse(i.get('@ActivationDate')),
                     'cribis_ent_id':int(i.get('@Ent_id')),
+                    'cribis_monitoring': True,
                     }
 
-            partner=self.env['res.partner'].create(data_odoo)
-            commit=self.env.cr.commit()
+            partner_id=self.env['res.partner'].search_read([('business_id','=' ,i.get('@Ic'))])
+            print (partner_id)
+            if partner_id:
+                for part in partner_id:
+                    partner_obj=self.env['res.partner'].browse(part['id'])
+                    partner_obj.write(data_odoo)
+                    commit=self.env.cr.commit()
+            else:
+                partner=self.env['res.partner'].create(data_odoo)
+                commit=self.env.cr.commit()
 
-            print(partner)
             #commit=self.env.cr.commit()
         #načíst organizace podle ičo
 
