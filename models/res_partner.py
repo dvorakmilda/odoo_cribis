@@ -14,11 +14,13 @@ from dateutil import parser
 class ResPartner(models.Model):
     _inherit = "res.partner"
     
-    business_id = fields.Char()
-    cribis_activation_date= fields.Datetime('Monitoring activation')
+    business_id = fields.Char(string='ICO')
+    cribis_activation_date= fields.Datetime(string='Monitoring activation')
+    cribis_report_date=fields.Datetime(string='Actual report date')
     cribis_monitoring = fields.Boolean(string='Monitoring cribis')
     cribis_ent_id = fields.Integer(string='')
-    
+    cribis_index_level = fields.Integer(string='Index10')
+    cribis_semafor = fields.Char(string='Semafor')
 
     def cribis_get_portfolio(self):
    
@@ -100,4 +102,72 @@ class ResPartner(models.Model):
         #když existuje organizace, tak u
 
 
+
+    def cribis_get_global_micro_report(self):
+
+        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
+        CRIBIS_LOGIN = cribis_company.get('cribis_login')
+        CRIBIS_PASSWORD = cribis_company.get('cribis_password')
+        PId= "CribisCZ_GetGlobalMicroReport"
+        PNs= "urn:crif-cribiscz-GetGlobalMicroReport:2014-04-08"
+        country='CZ'
+
+        for rec in self:
+
+            MGRequest='<GetGlobalMicroReportInput  Ico="' + rec.business_id + '" Pdf="false" Currency="CZK" Country="' + country + '" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:crif-cribiscz-GetGlobalMicroReport:2014-04-08"/>'
+            message = '<Message GId="' + \
+                str(uuid.uuid4())+ \
+                '" MId="' + \
+                str(uuid.uuid4()) + \
+                '" MTs="' + \
+                datetime.datetime.utcnow().isoformat() + \
+                '" xmlns="urn:crif-message:2006-08-23">' + \
+                '<C UD="" UId="' + \
+                CRIBIS_LOGIN + \
+                '" UPwd="' + \
+                CRIBIS_PASSWORD + \
+                '"/>' + \
+                '<P SId="SCZ" PId="'+ PId+'" PNs="'+ PNs+'"/>' + \
+                '<Tx TxNs="urn:crif-messagegateway:2006-08-23"/>' + \
+                "</Message>"
+            html_req=html.escape(MGRequest)
+            body = '<?xml version="1.0" encoding="utf-8"?>' + \
+                '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">' + \
+                "<soap:Header>" + \
+                message + \
+                "</soap:Header>" + \
+                "<soap:Body>" + \
+                '<MGRequest xmlns="urn:crif-messagegateway:2006-08-23">' + \
+                html_req+ \
+                "</MGRequest>" + \
+                "</soap:Body>" + \
+                "</soap:Envelope>"
+
+            headers = {"User-Agent": "asg-soap/0.0.1",
+                    "Content-Length": str(len(body)),
+                    "Accept": "text/xml",
+                    "Content-Type": "text/xml; charset=utf-8"
+                    }
+
+            call=requests.post(cribis_company.get('cribis_url'),data=body,headers=headers)
+            string_xml=call.text
+            tree=xmltodict.parse(string_xml)
+            data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
+            data_tree=xmltodict.parse(data)
+            company_identification=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyIdentification']
+            key_information=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyInformation']
+            financial_ratios=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['FinancialRatios']
+            company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyRatingCalculationResponse']
+            key_results_warning=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyResultsWarning']
+
+            data_odoo=[({'cribis_report_date': parser.parse(company_identification.get('ReportDate')),
+                        'cribis_ent_id': company_identification.get('EntId'),
+                        'cribis_index_level': company_rating_calculation_response.get('IndexCribis10Level'),
+                        'cribis_semafor': company_identification.get('Semafor'),
+                        })]
+
+
+            print(data_odoo, rec)
+
+            #commit=self.env.cr.commit()
 

@@ -5,23 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        },
-        {
                     "name": "Odoo: Attach",
                     "type": "python",
                     "request": "attach",
-                    "port": 8869,
+                    "port": 8069,
                     "debugServer": 8888,
                     "host": "localhost",
                     "justMyCode": false,
                     "pathMappings": [
                         {
-                            "localRoot": "${workspaceFolder}",
+                            "localRoot": "/home/milda/Dokumenty/CRIBIS/odoo_plugin/o_addons/odoo_cribis",
                             "remoteRoot": "/mnt/extra-addons/odoo_cribis",
                         }
                     ],
@@ -30,8 +23,4 @@
                     //"postDebugTask": "stop docker"
                 }
             ]
-        }
-
-
-
-}
+    }
