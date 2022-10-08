@@ -160,14 +160,11 @@ class ResPartner(models.Model):
             company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyRatingCalculationResponse']
             key_results_warning=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyResultsWarning']
 
-            data_odoo=[({'cribis_report_date': parser.parse(company_identification.get('ReportDate')),
-                        'cribis_ent_id': company_identification.get('EntId'),
-                        'cribis_index_level': company_rating_calculation_response.get('IndexCribis10Level'),
-                        'cribis_semafor': company_identification.get('Semafor'),
-                        })]
-
-
-            print(data_odoo, rec)
-
-            #commit=self.env.cr.commit()
+            report_date = parser.parse(company_identification.get('ReportDate'))
+            rec.cribis_report_date = report_date.strftime("%Y-%m-%d %H:%M:%S")
+            company_identification.get('EntId').replace("'","")
+            rec.cribis_ent_id = int(company_identification.get('EntId').replace("'",""))
+            rec.cribis_index_level = int(company_rating_calculation_response.get('IndexCribis10Level').replace("'",""))
+            rec.cribis_semafor = int(company_identification.get('Semafor').replace("'",""))
+            commit=self.env.cr.commit()
 
