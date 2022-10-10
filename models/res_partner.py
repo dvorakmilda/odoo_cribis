@@ -20,16 +20,66 @@ class ResPartner(models.Model):
     cribis_monitoring = fields.Boolean(string='Monitoring cribis')
     cribis_ent_id = fields.Integer(string='')
     cribis_index_level = fields.Integer(string='Index10')
-    cribis_semafor = fields.Char(string='Semafor')
+    cribis_semafor = fields.Char(string='Stoplights')
+    cribis_rc_url = fields.Char(compute='_compute_cribis_rc_url', string='Conection graph', store=True )
+    cribis_fl_url = fields.Char(compute='_compute_cribis_fl_url', string='Complete history', store=True)
+    cribis_invisible_form_buttons = fields.Boolean(string="cribis_invisible_form_buttons", default=True)
+
+
+
+
+    @api.depends('business_id')
+    def _compute_cribis_rc_url(self):
+        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
+        CRIBIS_LOGIN = cribis_company.get('cribis_login')
+        country='CZ'
+        for rec in self:
+            rec.cribis_rc_url='https://www2.cribis.cz/Hyperlinks/CertificateLink.aspx?username='+CRIBIS_LOGIN+'&language=cs-CZ&target=RC&output=Limited&country='+country+'&ico='+ str(rec.business_id)
+
+
+    @api.depends('business_id')
+    def _compute_cribis_fl_url(self):
+        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
+        CRIBIS_LOGIN = cribis_company.get('cribis_login')
+        country='CZ'
+        for rec in self:
+            rec.cribis_fl_url='https://www2.cribis.cz/Hyperlinks/CertificateLink.aspx?username='+CRIBIS_LOGIN+'&language=cs-CZ&target=FL&output=Limited&country='+country+'&ico='+ str(rec.business_id)
+
+
+
+    @api.onchange('business_id')
+    def _onchange_bussiness_id(self):
+        if self.business_id=='':
+            self.cribis_invisible_form_buttons=True
+        if len(self.business_id)==8:
+            self.cribis_invisible_form_buttons=False
+        else:
+            self.cribis_invisible_form_buttons=True
+
+
+    def cribis_get_rc(self):
+        return {  'name'     : 'Company relations graph',
+                  'type'     : 'ir.actions.act_url',
+                  'target'   : 'new',
+                  'url'      :  self.cribis_rc_url
+               }
+
+    def cribis_get_fl(self):
+        return {  'name'     : 'Complete company history',
+                  'type'     : 'ir.actions.act_url',
+                  'target'   : 'new',
+                  'url'      :  self.cribis_fl_url
+               }
+
 
     def cribis_get_portfolio(self):
-   
         PId= "CribisCZ_GetPortfolio"
         PNs= "urn:crif-cribiscz-GetPortfolio:2011-09-01"
         MGRequest='<GetPortfolioInput xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:crif-cribiscz-GetPortfolio:2011-09-01"/>'
         cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
         CRIBIS_LOGIN = cribis_company.get('cribis_login')
         CRIBIS_PASSWORD = cribis_company.get('cribis_password')
+
 
         message = '<Message GId="' + \
             str(uuid.uuid4())+ \
@@ -81,6 +131,7 @@ class ResPartner(models.Model):
                     'cribis_activation_date':parser.parse(i.get('@ActivationDate')),
                     'cribis_ent_id':int(i.get('@Ent_id')),
                     'cribis_monitoring': True,
+                    'cribis_invisible_form_buttons':True,
                     }
 
             partner_id=self.env['res.partner'].search_read([('business_id','=' ,i.get('@Ic'))])
@@ -93,14 +144,6 @@ class ResPartner(models.Model):
             else:
                 partner=self.env['res.partner'].create(data_odoo)
                 commit=self.env.cr.commit()
-
-            #commit=self.env.cr.commit()
-        #načíst organizace podle ičo
-
-        #podívat se podle ico jaký organizace mám v odoo
-
-        #když existuje organizace, tak u
-
 
 
     def cribis_get_global_micro_report(self):
@@ -167,4 +210,6 @@ class ResPartner(models.Model):
             rec.cribis_index_level = int(company_rating_calculation_response.get('IndexCribis10Level').replace("'",""))
             rec.cribis_semafor = int(company_identification.get('Semafor').replace("'",""))
             commit=self.env.cr.commit()
+
+
 
