@@ -24,7 +24,7 @@ Main functions:
     Company relations new window view
     """,
     'images': [],
-    'depends': [
+    'depends': ['contacts',
 
     ],
     'demo': [
@@ -33,6 +33,8 @@ Main functions:
     'data': [ 'views/res_company_views.xml',
              'views/res_partner_views.xml',
     ],
+
+    'external_dependencies': {'python': ['ares_util', 'xmltodict', 'requests', 'xml']},
     'installable': True,
     'auto_install': False,
     'application': False,

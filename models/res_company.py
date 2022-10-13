@@ -78,15 +78,3 @@ class ResCompany(models.Model):
 
 
 
-class ResCompanyCribis(models.Model):
-    _name = "res.company.cribis"
-    _description = 'res.company.cribis'
-
-    name = fields.Char(string='Account Type')
-    account_type_id = fields.Integer(string='')
-    valid_from = fields.Datetime(string='')
-    expiration = fields.Datetime(string='')
-    remaining = fields.Char(string='')
-    obtained = fields.Char(string='')
-    unit = fields.Char(string='')
-

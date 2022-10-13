@@ -26,8 +26,6 @@ class ResPartner(models.Model):
     cribis_invisible_form_buttons = fields.Boolean(string="cribis_invisible_form_buttons", default=True)
 
 
-
-
     @api.depends('business_id')
     def _compute_cribis_rc_url(self):
         cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
@@ -49,12 +47,50 @@ class ResPartner(models.Model):
 
     @api.onchange('business_id')
     def _onchange_bussiness_id(self):
-        if self.business_id=='':
+        czech_country_id = self.env.ref('base.cz').id
+        company_country_id = self.env.company.country_id.id
+
+        if self.business_id is not False and (len(self.business_id) not in (0, 8)):
+            raise UserError(_("Bad number,for CZ must be exactly 8 numbers !"))
+
+        validate_ico = False
+        address = False
+        if not self.business_id:
             self.cribis_invisible_form_buttons=True
-        if len(self.business_id)==8:
-            self.cribis_invisible_form_buttons=False
+            return
+        if self.country_id and self.country_id.id != czech_country_id:
+            self.cribis_invisible_form_buttons=True
+            return
+        if not self.country_id and czech_country_id != company_country_id:
+            self.cribis_invisible_form_buttons=True
+            return
         else:
-            self.cribis_invisible_form_buttons=True
+            self.cribis_invisible_form_buttons=False
+        try:
+            validate_ico = validate_czech_company_id(self.business_id)
+        except AresConnectionError as ares_err:
+            raise UserError(_("Network Connection Error!")) from ares_err
+        except Exception as odoo_err:
+            raise UserError(_("Business_ID not found!")) from odoo_err
+
+        if validate_ico:
+            try:
+                ares = call_ares(self.business_id)
+                address = ares['address']
+                legal = ares['legal']
+            except AresConnectionError as ares_err:
+                raise UserError(_("Network Connection Error!")) from ares_err
+        if address:
+            self['name'] = legal.get('company_name')
+            self['vat'] = legal.get('company_vat_id')
+            self['city'] = address.get('city')
+            self['street'] = address.get('street')
+            self['zip'] = address.get('zip_code')
+            self['country_id'] = czech_country_id
+            if address.get('city_part') != self.city:
+                self['street2'] = address.get('city_part')
+            if address.get('city_town_part') is not None:
+                self['city'] = address.get('city_town_part')
 
 
     def cribis_get_rc(self):
