@@ -24,16 +24,17 @@ Main functions:
     Company relations new window view
     """,
     'images': [],
-    'depends': ['contacts','l10n_cz', 'ks_percent_field',
-
-    ],
+    'external_dependencies': {
+    'python': [
+        'ares_util',
+        ],
+    },
+    'depends': ['contacts','l10n_cz', 'ks_percent_field',],
     'demo': [
     ],
-
     'data': [ 'views/res_company_views.xml',
              'views/res_partner_views.xml',
     ],
-
     'external_dependencies': {'python': ['ares_util', 'xmltodict', 'requests', 'xml']},
     'installable': True,
     'auto_install': False,
