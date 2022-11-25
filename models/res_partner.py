@@ -13,42 +13,54 @@ from dateutil import parser
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
-    
+
     business_id = fields.Char(string='ICO')
     cribis_activation_date= fields.Datetime(string='Monitoring activation')
     cribis_report_date=fields.Datetime(string='Actual report date')
     cribis_monitoring = fields.Boolean(string='Monitoring cribis')
     cribis_ent_id = fields.Integer(string='')
-    cribis_index_level = fields.Integer(string='Index10')
-    cribis_semafor = fields.Char(string='Stoplights')
+    cribis_index_level = fields.Integer(string='Index')
+    cribis_semafor = fields.Integer(string='Stoplights')
     cribis_rc_url = fields.Char(compute='_compute_cribis_rc_url', string='Conection graph', store=True )
     cribis_fl_url = fields.Char(compute='_compute_cribis_fl_url', string='Complete history', store=True)
     cribis_invisible_form_buttons = fields.Boolean(string="cribis_invisible_form_buttons", default=True)
+    cribis_index10_level = fields.Integer(string='Index 10', default='0')
+    cribis_credit_capacity = fields.Float(string='Credit Capacity')
+    cribis_credit_used = fields.Float(string='Credit Used')
+    cribis_probability_of_default = fields.Float(string='Probability of Default')
+    cribis_end_date = fields.Datetime(string='End Date')
+    cribis_revenues = fields.Float(string='Revenues')
+    cribis_profitLoss = fields.Float(string='Profit Loss')
+    cribis_total_assets = fields.Float(string='Total Assets')
+    cribis_turnover_range = fields.Float(string='Turnover Range')
+    cribis_main_nace = fields.Char(string='Main NACE')
+    cribis_main_okec = fields.Char(string='Main OKEC')
+    cribis_employees_range = fields.Char(string='Employees Range')
+    cribis_registered_capital = fields.Float(string='Registered Capital')
+    cribis_index10_max_rate = fields.Integer(string='cribis_index10_max_rate', default='10')
+    cribis_stars = fields.Selection([('na', 'NA'),('poor', 'Poor'),('bad', 'Bad'),('normal', 'Normal'),('good', 'Good'), ('excelent', 'Excelent')], "Index 5", default='na')
+
 
 
     @api.depends('business_id')
     def _compute_cribis_rc_url(self):
-        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
-        CRIBIS_LOGIN = cribis_company.get('cribis_login')
-        country='CZ'
+        CRIBIS_LOGIN = self.env.user.company_id.cribis_login
         for rec in self:
-            rec.cribis_rc_url='https://www2.cribis.cz/Hyperlinks/CertificateLink.aspx?username='+CRIBIS_LOGIN+'&language=cs-CZ&target=RC&output=Limited&country='+country+'&ico='+ str(rec.business_id)
+            rec.cribis_rc_url='https://www2.cribis.cz/Hyperlinks/CertificateLink.aspx?username='+CRIBIS_LOGIN+'&language=cs-CZ&target=RC&output=Limited&country='+str(rec.country_id.code)+'&ico='+ str(rec.business_id)
 
 
     @api.depends('business_id')
     def _compute_cribis_fl_url(self):
-        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
-        CRIBIS_LOGIN = cribis_company.get('cribis_login')
-        country='CZ'
+        CRIBIS_LOGIN = self.env.user.company_id.cribis_login
         for rec in self:
-            rec.cribis_fl_url='https://www2.cribis.cz/Hyperlinks/CertificateLink.aspx?username='+CRIBIS_LOGIN+'&language=cs-CZ&target=FL&output=Limited&country='+country+'&ico='+ str(rec.business_id)
+            rec.cribis_fl_url='https://www2.cribis.cz/Hyperlinks/CertificateLink.aspx?username='+CRIBIS_LOGIN+'&language=cs-CZ&target=FL&output=Limited&country='+str(rec.country_id.code)+'&ico='+ str(rec.business_id)
 
 
 
     @api.onchange('business_id')
     def _onchange_bussiness_id(self):
+        #neměnit, zatim funguje pouze pro CZ
         czech_country_id = self.env.ref('base.cz').id
-        company_country_id = self.env.company.country_id.id
 
         if self.business_id is not False and (len(self.business_id) not in (0, 8)):
             raise UserError(_("Bad number,for CZ must be exactly 8 numbers !"))
@@ -59,9 +71,6 @@ class ResPartner(models.Model):
             self.cribis_invisible_form_buttons=True
             return
         if self.country_id and self.country_id.id != czech_country_id:
-            self.cribis_invisible_form_buttons=True
-            return
-        if not self.country_id and czech_country_id != company_country_id:
             self.cribis_invisible_form_buttons=True
             return
         else:
@@ -112,9 +121,8 @@ class ResPartner(models.Model):
         PId= "CribisCZ_GetPortfolio"
         PNs= "urn:crif-cribiscz-GetPortfolio:2011-09-01"
         MGRequest='<GetPortfolioInput xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:crif-cribiscz-GetPortfolio:2011-09-01"/>'
-        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
-        CRIBIS_LOGIN = cribis_company.get('cribis_login')
-        CRIBIS_PASSWORD = cribis_company.get('cribis_password')
+        CRIBIS_LOGIN = self.env.user.company_id.cribis_login
+        CRIBIS_PASSWORD = self.env.user.company_id.cribis_password
 
 
         message = '<Message GId="' + \
@@ -151,7 +159,7 @@ class ResPartner(models.Model):
                 "Content-Type": "text/xml; charset=utf-8"
                 }
 
-        call=requests.post(cribis_company.get('cribis_url'),data=body,headers=headers)
+        call=requests.post(active_company.cribis_url,data=body,headers=headers)
         string_xml=call.text
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
@@ -159,7 +167,7 @@ class ResPartner(models.Model):
         cribis_partner=self.env['res.partner'].search_read([('company_type','=' ,'company')])
         for i in data_tree:
             country_id=self.env['res.country'].search([('code','like', i.get('@CountryCode') )])
-            print (country_id['id'])
+            #print (country_id['id'])
             data_odoo={'name':i.get('@Name'),
                     'company_type': 'company',
                     'business_id': i.get('@Ic'),
@@ -168,10 +176,11 @@ class ResPartner(models.Model):
                     'cribis_ent_id':int(i.get('@Ent_id')),
                     'cribis_monitoring': True,
                     'cribis_invisible_form_buttons':True,
+                    'cribis_stars':'na'
                     }
 
             partner_id=self.env['res.partner'].search_read([('business_id','=' ,i.get('@Ic'))])
-            print (partner_id)
+            #print (partner_id)
             if partner_id:
                 for part in partner_id:
                     partner_obj=self.env['res.partner'].browse(part['id'])
@@ -183,17 +192,13 @@ class ResPartner(models.Model):
 
 
     def cribis_get_global_micro_report(self):
-
-        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
-        CRIBIS_LOGIN = cribis_company.get('cribis_login')
-        CRIBIS_PASSWORD = cribis_company.get('cribis_password')
+        CRIBIS_LOGIN = self.env.user.company_id.cribis_login
+        CRIBIS_PASSWORD = self.env.user.company_id.cribis_password
         PId= "CribisCZ_GetGlobalMicroReport"
         PNs= "urn:crif-cribiscz-GetGlobalMicroReport:2014-04-08"
-        country='CZ'
 
         for rec in self:
-
-            MGRequest='<GetGlobalMicroReportInput  Ico="' + rec.business_id + '" Pdf="false" Currency="CZK" Country="' + country + '" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:crif-cribiscz-GetGlobalMicroReport:2014-04-08"/>'
+            MGRequest='<GetGlobalMicroReportInput  Ico="' + rec.business_id + '" Pdf="false" Currency="CZK" Country="' + rec.country_id.code + '" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:crif-cribiscz-GetGlobalMicroReport:2014-04-08"/>'
             message = '<Message GId="' + \
                 str(uuid.uuid4())+ \
                 '" MId="' + \
@@ -228,7 +233,7 @@ class ResPartner(models.Model):
                     "Content-Type": "text/xml; charset=utf-8"
                     }
 
-            call=requests.post(cribis_company.get('cribis_url'),data=body,headers=headers)
+            call=requests.post(self.env.user.company_id.cribis_url,data=body,headers=headers)
             string_xml=call.text
             tree=xmltodict.parse(string_xml)
             data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
@@ -239,13 +244,100 @@ class ResPartner(models.Model):
             company_rating_calculation_response=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['CompanyRatingCalculationResponse']
             key_results_warning=data_tree['GetGlobalMicroReportOutput']['CompanyGlobalMicroReport']['KeyResultsWarning']
 
+            #company_identification
             report_date = parser.parse(company_identification.get('ReportDate'))
             rec.cribis_report_date = report_date.strftime("%Y-%m-%d %H:%M:%S")
             company_identification.get('EntId').replace("'","")
             rec.cribis_ent_id = int(company_identification.get('EntId').replace("'",""))
-            rec.cribis_index_level = int(company_rating_calculation_response.get('IndexCribis10Level').replace("'",""))
+            rec.cribis_index_level = int(company_rating_calculation_response.get('IndexCribisLevel').replace("NA","0").replace("'",""))
+            rec.cribis_index10_level = int(company_rating_calculation_response.get('IndexCribis10Level').replace("NA","0").replace("'",""))
             rec.cribis_semafor = int(company_identification.get('Semafor').replace("'",""))
+
+            if rec.cribis_index_level==1:
+                rec.cribis_stars="poor"
+            if rec.cribis_index_level==2:
+                rec.cribis_stars="bad"
+            if rec.cribis_index_level==3:
+                rec.cribis_stars="normal"
+            if rec.cribis_index_level==4:
+                rec.cribis_stars="good"
+            if rec.cribis_index_level==5:
+                rec.cribis_stars="excelent"
+            if rec.cribis_index_level==0:
+                rec.cribis_stars="na"
+
+            #key_information
+
+
+
+            #company_rating_calculation
+            if company_rating_calculation_response.get('CreditCapacity'):
+                rec.cribis_credit_capacity=float(company_rating_calculation_response.get('CreditCapacity'))*float(company_rating_calculation_response.get('CreditUnit'))
+            else:
+                rec.cribis_credit_capacity=0
+            if company_rating_calculation_response.get('CreditUsed'):
+                rec.cribis_credit_used=float(company_rating_calculation_response.get('CreditUsed'))*float(company_rating_calculation_response.get('CreditUnit'))
+            else:
+                rec.cribis_credit_used=0
+
+            rec.cribis_probability_of_default=float(company_rating_calculation_response.get('ProbabilityOfDefault').replace("NA","0").replace("'",""))
+            
+
             commit=self.env.cr.commit()
 
 
 
+"""
+        sql.connect(config.helios, function(err) {
+            var CI = result.GetGlobalMicroReportOutput.CompanyGlobalMicroReport.CompanyIdentification;
+            var KI = result.GetGlobalMicroReportOutput.CompanyGlobalMicroReport.KeyInformation;
+            var FR = result.GetGlobalMicroReportOutput.CompanyGlobalMicroReport.FinancialRatios;
+            var CR = result.GetGlobalMicroReportOutput.CompanyGlobalMicroReport.CompanyRatingCalculationResponse;
+
+
+            //console.log(require('util').inspect(KI, { depth: null }));
+            // srovna financni parametry do pole s indexy Id
+            /*
+            if (FR.SetOfRatios) {
+                if (FR.SetOfRatios[0] && FR.SetOfRatios[0].ArrayOfRatios) {
+                    var ratios = indexBy('Id', FR.SetOfRatios[0].ArrayOfRatios.Ratio);
+				}
+            }
+    */
+
+            var employees = ''
+            if (KI.EmployeesRangeList && KI.EmployeesRangeList.EmployeesRange) {
+                if (Array.isArray(KI.EmployeesRangeList.EmployeesRange)) {
+                    employees = KI.EmployeesRangeList.EmployeesRange[0].Value
+                } else {
+                    employees = KI.EmployeesRangeList.EmployeesRange.Value
+                }
+            }
+
+            var struct = {
+                _cribis_EntId: CI.EntId,
+                _cribis_ReportDate: "'" + moment(CI.ReportDate).format("YYYY-MM-DD HH:mm:ss") + "'",
+                _cribis_Semafor: CI.Semafor,
+                _cribis_IndexCribisLevel: (CR.IndexCribisLevel == 'NA') ? -1 : CR.IndexCribisLevel,
+                _cribis_IndexCribis10Level: (CR.IndexCribis10Level == 'NA') ? -1 : CR.IndexCribis10Level,
+                _cribis_CreditCapacity: (CR.CreditCapacity) ? CR.CreditCapacity * CR.CreditUnit : -1,
+                _cribis_CreditUsed: (CR.CreditUsed) ? CR.CreditUsed * CR.CreditUnit : -1,
+                _cribis_ProbabilityOfDefault: (CR.ProbabilityOfDefault) ? CR.ProbabilityOfDefault : -1,
+                _cribis_EndDate: (FR.SetOfRatios && FR.SetOfRatios[0]) ? "'" + FR.SetOfRatios[0].EndDate + "'" : -1,
+                _cribis_Revenues: (KI.BasicEconomicsList && KI.BasicEconomicsList.BasicEconomics && KI.BasicEconomicsList.BasicEconomics[0] && KI.BasicEconomicsList.BasicEconomics[0].Revenues) ? KI.BasicEconomicsList.BasicEconomics[0].Revenues : -1, // Výnosy
+                _cribis_ProfitLoss: (KI.BasicEconomicsList && KI.BasicEconomicsList.BasicEconomics && KI.BasicEconomicsList.BasicEconomics[0] && KI.BasicEconomicsList.BasicEconomics[0].ProfitLoss) ? KI.BasicEconomicsList.BasicEconomics[0].ProfitLoss : -1, // Zisk/ztráta
+                _cribis_TotalAssets: (KI.BasicEconomicsList && KI.BasicEconomicsList.BasicEconomics && KI.BasicEconomicsList.BasicEconomics[0] && KI.BasicEconomicsList.BasicEconomics[0].TotalAssets) ? KI.BasicEconomicsList.BasicEconomics[0].TotalAssets : -1, // Základní kapitál
+				_cribis_TurnoverRange: (KI.TurnoverRangeList && KI.TurnoverRangeList.TurnoverRange[0] && KI.TurnoverRangeList.TurnoverRange[0].Value) ? "'" + KI.TurnoverRangeList.TurnoverRange[0].Value + "'" : -1, // Kategorie obratu
+
+                _cribis_MainNACE: (CI.MainNACE) ? "'" + CI.MainNACE.Code + ' - ' + CI.MainNACE.Description + "'" : "''", // NACE
+                _cribis_MainOKEC: (CI.MainOkec) ? "'" + CI.MainOkec.Code + ' - ' + CI.MainOkec.Description + "'" : "''", // OKEČ
+
+
+                _cribis_EmployeesRange: "'" + employees + "'", // zaměstnanci
+                _cribis_RegisteredCapital: (KI.RegisteredCapital) ? KI.RegisteredCapital : -1
+
+
+
+
+
+"""

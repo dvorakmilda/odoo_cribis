@@ -24,7 +24,7 @@ Main functions:
     Company relations new window view
     """,
     'images': [],
-    'depends': ['contacts',
+    'depends': ['contacts','l10n_cz', 'ks_percent_field',
 
     ],
     'demo': [

@@ -7,6 +7,8 @@ ošetřit chybové hlášky z api
 dostupnost přístupu adresy/služby cribis
 neplatnost přihlašovacích údajů
 
+přidat natažení nebo ověření bankovního účtu DPH
+
 
 převedení xml odpovědi do json objektu pak do pythonu
 

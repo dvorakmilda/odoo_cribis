@@ -5,6 +5,16 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref='base.view_partner_form'/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='image_1920']" position="before">
+                <field name="cribis_semafor" invisible="True"/>
+                <widget name="web_ribbon" title="BAD" bg_color="bg-danger"
+                        attrs="{'invisible': [('cribis_semafor', '!=', 3)]}"/>
+                <widget name="web_ribbon" title="NA" bg_color="bg-info"
+                        attrs="{'invisible': [('cribis_semafor', '!=', 2)]}"/>
+                <widget name="web_ribbon" title="OK"
+                        attrs="{'invisible': [('cribis_semafor', '!=', 1)]}"/>
+
+            </xpath>
             <xpath expr="//field[@name='image_1920']" position="after">
                 <field name='cribis_invisible_form_buttons' invisible="True"/>
                 <button name="cribis_get_portfolio" string="Get Portfolio" type="object" class="oe_highlight"/>
@@ -20,9 +30,17 @@
                     <group>
                         <group>
                             <field name="cribis_report_date"/>
-                            <field name="cribis_index_level"/>
-                            <field name="cribis_semafor"/>
+                            <field name="cribis_index_level" invisible="True"/>
+                            <field name="cribis_index10_max_rate"  invisible="True"/>
+
                         </group>
+                        <group>
+                            <field name="cribis_credit_capacity" widget="monetary"/>
+                            <field name="cribis_credit_used" widget="monetary"/>
+                            <field name="cribis_probability_of_default" widget="Percent" />
+                        </group>
+                            <field name="cribis_stars" widget="priority" readonly="True"/>
+                            <field name="cribis_index10_level" readonly="True" widget="gauge" options="{'max_field':'cribis_index10_max_rate', 'style':'width:120px;height:80px;cursor:pointer;'}"></field>
                     </group>
                 </page>
             </xpath>
