@@ -17,27 +17,30 @@
             </xpath>
             <xpath expr="//field[@name='image_1920']" position="after">
                 <field name='cribis_invisible_form_buttons' invisible="True"/>
-                <button name="cribis_get_portfolio" string="Get Portfolio" type="object" class="oe_highlight"/>
-                <button name="cribis_get_global_micro_report" string="Get Microreport" type="object" class="oe_highlight" attrs="{'invisible':[('cribis_invisible_form_buttons','=',True)]}"/>
                 <button name="cribis_get_rc" string="Company relations graph" type="object" class="oe_highlight" attrs="{'invisible':[('cribis_invisible_form_buttons','=',True)]}"/>
-                <button name="cribis_get_fl" string="Complete company history" type="object" class="oe_highlight" attrs="{'invisible':[('cribis_invisible_form_buttons','=',True)]}"/>
             </xpath>
             <xpath expr="//field[@name='vat']" position="after">
                 <field name="business_id"/>
             </xpath>
             <xpath expr="//page[@name='internal_notes']" position="after">
                <page string="CRIBIS" name="cribis_info">
+                <field name='cribis_invisible_form_buttons' invisible="True"/>
+                <button name="cribis_get_portfolio" string="Get Portfolio" type="object" class="oe_highlight"/>
+                <button name="cribis_get_global_micro_report" string="Get Microreport" type="object" class="oe_highlight" attrs="{'invisible':[('cribis_invisible_form_buttons','=',True)]}"/>
+                <button name="cribis_get_rc" string="Company relations graph" type="object" class="oe_highlight" attrs="{'invisible':[('cribis_invisible_form_buttons','=',True)]}"/>
+                <button name="cribis_get_fl" string="Complete company history" type="object" class="oe_highlight" attrs="{'invisible':[('cribis_invisible_form_buttons','=',True)]}"/>
                     <group>
                         <group>
                             <field name="cribis_report_date"/>
                             <field name="cribis_index_level" invisible="True"/>
                             <field name="cribis_index10_max_rate"  invisible="True"/>
-
+                            <field name="invoice_warn"/>
+                            <field name="invoice_warn_msg"/>
                         </group>
                         <group>
                             <field name="cribis_credit_capacity" widget="monetary"/>
                             <field name="cribis_credit_used" widget="monetary"/>
-                            <field name="cribis_probability_of_default" widget="Percent" />
+                            <field name="cribis_probability_of_default" />
                         </group>
                             <field name="cribis_stars" widget="priority" readonly="True"/>
                             <field name="cribis_index10_level" readonly="True" widget="gauge" options="{'max_field':'cribis_index10_max_rate', 'style':'width:120px;height:80px;cursor:pointer;'}"></field>

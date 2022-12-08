@@ -24,14 +24,16 @@ class ResCompany(models.Model):
     cribis_ftp_password = fields.Char(string='')
 
     def cribis_get_global_validate_user_output(self):
-        cribis_company=self.env['res.company'].search_read([('id', '=', 1)])[0]
-        company_obj=self.env['res.company'].browse(1)
+        CRIBIS_LOGIN = self.env.user.company_id.cribis_login
+        CRIBIS_PASSWORD = self.env.user.company_id.cribis_password
+
+        company_obj=self.env['res.company'].browse(self.env.user.company_id.id)
 
         body = '<?xml version="1.0" encoding="utf-8"?>' + \
             '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">' + \
             '<soap:Header>' + \
             '<Message GId="' + str(uuid.uuid4()) + '" MId="' + str(uuid.uuid4()) + '" MTs="' + datetime.datetime.utcnow().isoformat() + '" xmlns="urn:crif-message:2006-08-23">' + \
-            '<C UD="" UId="' + cribis_company.get('cribis_login') + '" UPwd="' + cribis_company.get('cribis_password') + '"/>' + \
+            '<C UD="" UId="' + CRIBIS_LOGIN + '" UPwd="' + CRIBIS_PASSWORD + '"/>' + \
             '<P SId="SCZ" PId="CribisCZ_GlobalValidateUser" PNs="urn:crif-cribiscz-GlobalValidateUser:2015-10-21"/>' + \
             '<Tx TxNs="urn:crif-messagegateway:2006-08-23"/>' + \
             '</Message>' + \
@@ -50,13 +52,13 @@ class ResCompany(models.Model):
                 "Content-Type": "text/xml; charset=utf-8"
                 }
 
-        call=requests.post(cribis_company.get('cribis_url'),data=body,headers=headers)
+        call=requests.post(self.env.user.company_id.cribis_url,data=body,headers=headers)
         string_xml=call.text
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
         data_xml=xmltodict.parse(data)
         accounts=data_xml['GlobalValidateUserOutput']['Accounts']['Account']
-        for cribis_id in cribis_company.get('cribis_ids'):
+        for cribis_id in self.env.user.company_id.cribis_ids:
             delete_id=company_obj.write( {'cribis_ids' : [(2,cribis_id)]})
             print(delete_id)
 #        delete_cribis_ids=company_obj.write( {'cribis_ids' : [(5,_,_)]})

@@ -159,7 +159,7 @@ class ResPartner(models.Model):
                 "Content-Type": "text/xml; charset=utf-8"
                 }
 
-        call=requests.post(active_company.cribis_url,data=body,headers=headers)
+        call=requests.post(self.env.user.company_id.cribis_url,data=body,headers=headers)
         string_xml=call.text
         tree=xmltodict.parse(string_xml)
         data=tree['soap:Envelope']['soap:Body']['MGResponse'].get('#text')
@@ -266,6 +266,13 @@ class ResPartner(models.Model):
             if rec.cribis_index_level==0:
                 rec.cribis_stars="na"
 
+            #banka
+            bank_accounts_list=[]
+            bank_accounts_list.append(company_identification.get('BankInfoList'))
+            for i in bank_accounts_list:
+                val=i['BankInfo']['Value']
+                print(val)
+
             #key_information
 
 
@@ -281,7 +288,7 @@ class ResPartner(models.Model):
                 rec.cribis_credit_used=0
 
             rec.cribis_probability_of_default=float(company_rating_calculation_response.get('ProbabilityOfDefault').replace("NA","0").replace("'",""))
-            
+
 
             commit=self.env.cr.commit()
 

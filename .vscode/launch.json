@@ -14,7 +14,7 @@
                     "justMyCode": false,
                     "pathMappings": [
                         {
-                            "localRoot": "/home/milda/Dokumenty/CRIBIS/odoo_plugin/o_addons/odoo_cribis",
+                            "localRoot": "/home/milda/Dokumenty/Odoo/odoo-16-docker/o_addons/odoo_cribis",
                             "remoteRoot": "/mnt/extra-addons/odoo_cribis",
                         }
                     ],

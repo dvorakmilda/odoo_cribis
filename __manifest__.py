@@ -1,6 +1,6 @@
 {
     'name': 'O4 CRIBIS BRIDGE',
-    'version': '14.0.1.1.0',
+    'version': '16.0.1.1.0',
     "sequence": 1,
     'category': 'Partners',
     'summary': 'Adds information from CRIBIS service',
@@ -29,9 +29,22 @@ Main functions:
         'ares_util',
         ],
     },
-    'depends': ['contacts','l10n_cz', 'ks_percent_field',],
+    'depends': ['contacts','l10n_cz',],
     'demo': [
     ],
+    'assets': {
+        'web.assets_backend': [
+    #       'web/static/src/xml/**/*',
+        ],
+        'web.assets_common': [
+    #        'web/static/lib/bootstrap/**/*',
+    #        'web/static/src/js/boot.js',
+    #        'web/static/src/js/webclient.js',
+        ],
+        'web.qunit_suite_tests': [
+    #        'web/static/src/js/webclient_tests.js',
+        ],
+    },
     'data': [ 'views/res_company_views.xml',
              'views/res_partner_views.xml',
     ],

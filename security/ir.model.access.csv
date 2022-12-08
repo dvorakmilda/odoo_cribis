@@ -1,5 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_res_company_user,res.company.user,model_res_company,base.group_user,1,1,1,1
-access_res_company_cribis_user,res.company.cribis.user,model_res_company_cribis,base.group_user,1,1,1,1
-access_res_partner_user,res.partner.user,model_res_partner,base.group_user,1,1,1,1
-access_res_partner_cribis_user,res.partner.cribis.user,model_res_partner_cribis,base.group_user,1,1,1,1
+access_res_company_cribis,res.company.cribis,model_res_company_cribis,base.group_user,1,1,1,1
+access_res_partner_cribis,res.partner.cribis,model_res_partner_cribis,base.group_user,1,1,1,1
